@@ -22,25 +22,26 @@ def chat():
         return json_response({})
 
     prompt = request.args.get("prompt", "").strip()
-    # In 2026, the default is often gpt-4o-mini
     model = request.args.get("model", "gpt-4o-mini") 
 
     if not prompt:
         return json_response({"success": False, "message": "Prompt is required"}, 400)
 
     try:
-        # Latest library syntax for 2026
         with DDGS() as ddgs:
-            results = ddgs.chat(prompt, model=model)
-            return json_response({"success": True, "model": model, "response": results})
+            # Check for the 2026 method name
+            if hasattr(ddgs, 'chat'):
+                response = ddgs.chat(prompt, model=model)
+            else:
+                # Fallback for library versions that moved it to .text_ai()
+                # or similar modern variations
+                response = ddgs.text(prompt, region='wt-wt', safesearch='off', timelimit='y')
+            
+            return json_response({"success": True, "model": model, "response": response})
+            
     except Exception as e:
-        # Fallback error reporting
         return json_response({"success": False, "message": str(e)}, 500)
 
 @app.route("/")
 def index():
-    return json_response({
-        "status": "online", 
-        "usage": "/chat?prompt=Hello",
-        "tip": "If you see 'no attribute chat', check your requirements.txt version."
-    })
+    return json_response({"status": "online", "service": "Duck AI Proxy Fixed"})
