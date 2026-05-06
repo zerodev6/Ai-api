@@ -1,6 +1,6 @@
 from flask import Flask, request, Response
 import json
-from duckduckgo_search import DDGS
+from duckai import DuckAI
 
 app = Flask(__name__)
 
@@ -22,29 +22,23 @@ def chat():
         return json_response({})
 
     prompt = request.args.get("prompt", "").strip()
-    # In 2026, the available models are 'gpt-4o-mini', 'claude-3-haiku', 'llama-3.3-70b'
-    model = request.args.get("model", "gpt-4o-mini") 
+    model = request.args.get("model", "gpt-4o-mini")
 
     if not prompt:
         return json_response({"success": False, "message": "Prompt is required"}, 400)
 
     try:
-        with DDGS() as ddgs:
-            # The .chat() method returns a generator (stream) in 2026.
-            # We must loop through it to build the full text string.
-            full_text = ""
-            for chunk in ddgs.chat(prompt, model=model):
-                full_text += chunk
-            
-            if not full_text:
-                return json_response({"success": False, "message": "DuckDuckGo returned an empty response."}, 500)
+        result = DuckAI().chat(prompt, model=model)
 
-            return json_response({
-                "success": True, 
-                "model": model, 
-                "response": full_text
-            })
-            
+        if not result:
+            return json_response({"success": False, "message": "DuckAI returned an empty response."}, 500)
+
+        return json_response({
+            "success": True,
+            "model": model,
+            "response": result
+        })
+
     except Exception as e:
         return json_response({"success": False, "message": str(e)}, 500)
 
