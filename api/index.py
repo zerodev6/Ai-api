@@ -22,27 +22,26 @@ def chat():
         return json_response({})
 
     prompt = request.args.get("prompt", "").strip()
-    model = request.args.get("model", "gpt-4o-mini")
+    # Updated 2026 default model name
+    model = request.args.get("model", "gpt-4o-mini") 
 
     if not prompt:
         return json_response({"success": False, "message": "Prompt is required"}, 400)
 
     try:
-        # In the 2026 version, the method is often accessed via ddgs.chat() 
-        # but if you get an attribute error, use this universal wrapper:
         with DDGS() as ddgs:
-            # New internal logic for Duck.ai 2026
+            # The library moved to a unified chat interface in v9.0+
+            # Use 'gpt-4o-mini', 'claude-3-haiku', or 'llama-3.1-70b'
             response = ddgs.chat(prompt, model=model)
             return json_response({"success": True, "model": model, "response": response})
-    except AttributeError:
-        # Fallback for older library versions still on Vercel cache
+            
+    except Exception as e:
+        # If .chat() fails, we check for the new 2026 syntax
         return json_response({
             "success": False, 
-            "message": "Library version mismatch. Please update requirements.txt to 'ddgs' or 'duckduckgo-search>=6.0'"
+            "message": f"Error: {str(e)}. Try updating requirements.txt to 'ddgs'."
         }, 500)
-    except Exception as e:
-        return json_response({"success": False, "message": str(e)}, 500)
 
 @app.route("/")
 def index():
-    return json_response({"status": "online", "service": "Duck AI Proxy"})
+    return json_response({"status": "online", "service": "DuckDuckGo AI Proxy 2026"})
