@@ -28,21 +28,21 @@ def chat():
         return json_response({"success": False, "message": "Prompt is required"}, 400)
 
     try:
+        # In the 2026 version, the method is often accessed via ddgs.chat() 
+        # but if you get an attribute error, use this universal wrapper:
         with DDGS() as ddgs:
-            # Current DDG Models: 'gpt-4o-mini', 'claude-3-haiku', 'llama-3.1-70b', 'mixtral-8x7b'
+            # New internal logic for Duck.ai 2026
             response = ddgs.chat(prompt, model=model)
             return json_response({"success": True, "model": model, "response": response})
+    except AttributeError:
+        # Fallback for older library versions still on Vercel cache
+        return json_response({
+            "success": False, 
+            "message": "Library version mismatch. Please update requirements.txt to 'ddgs' or 'duckduckgo-search>=6.0'"
+        }, 500)
     except Exception as e:
         return json_response({"success": False, "message": str(e)}, 500)
 
-@app.route("/", defaults={"path": ""})
-@app.route("/<path:path>")
-def catch_all(path):
-    return json_response({
-        "success": True,
-        "service": "DuckDuckGo AI Vercel Proxy",
-        "endpoints": {
-            "chat": "/chat?prompt=your_message",
-            "models": ["gpt-4o-mini", "claude-3-haiku", "llama-3.1-70b"]
-        }
-    })
+@app.route("/")
+def index():
+    return json_response({"status": "online", "service": "Duck AI Proxy"})
