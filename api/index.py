@@ -22,6 +22,7 @@ def chat():
         return json_response({})
 
     prompt = request.args.get("prompt", "").strip()
+    # In 2026, the available models are 'gpt-4o-mini', 'claude-3-haiku', 'llama-3.3-70b'
     model = request.args.get("model", "gpt-4o-mini") 
 
     if not prompt:
@@ -29,19 +30,24 @@ def chat():
 
     try:
         with DDGS() as ddgs:
-            # Check for the 2026 method name
-            if hasattr(ddgs, 'chat'):
-                response = ddgs.chat(prompt, model=model)
-            else:
-                # Fallback for library versions that moved it to .text_ai()
-                # or similar modern variations
-                response = ddgs.text(prompt, region='wt-wt', safesearch='off', timelimit='y')
+            # The .chat() method returns a generator (stream) in 2026.
+            # We must loop through it to build the full text string.
+            full_text = ""
+            for chunk in ddgs.chat(prompt, model=model):
+                full_text += chunk
             
-            return json_response({"success": True, "model": model, "response": response})
+            if not full_text:
+                return json_response({"success": False, "message": "DuckDuckGo returned an empty response."}, 500)
+
+            return json_response({
+                "success": True, 
+                "model": model, 
+                "response": full_text
+            })
             
     except Exception as e:
         return json_response({"success": False, "message": str(e)}, 500)
 
 @app.route("/")
 def index():
-    return json_response({"status": "online", "service": "Duck AI Proxy Fixed"})
+    return json_response({"status": "online", "service": "Duck AI Proxy 2026"})
