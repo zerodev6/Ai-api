@@ -22,26 +22,25 @@ def chat():
         return json_response({})
 
     prompt = request.args.get("prompt", "").strip()
-    # Updated 2026 default model name
+    # In 2026, the default is often gpt-4o-mini
     model = request.args.get("model", "gpt-4o-mini") 
 
     if not prompt:
         return json_response({"success": False, "message": "Prompt is required"}, 400)
 
     try:
+        # Latest library syntax for 2026
         with DDGS() as ddgs:
-            # The library moved to a unified chat interface in v9.0+
-            # Use 'gpt-4o-mini', 'claude-3-haiku', or 'llama-3.1-70b'
-            response = ddgs.chat(prompt, model=model)
-            return json_response({"success": True, "model": model, "response": response})
-            
+            results = ddgs.chat(prompt, model=model)
+            return json_response({"success": True, "model": model, "response": results})
     except Exception as e:
-        # If .chat() fails, we check for the new 2026 syntax
-        return json_response({
-            "success": False, 
-            "message": f"Error: {str(e)}. Try updating requirements.txt to 'ddgs'."
-        }, 500)
+        # Fallback error reporting
+        return json_response({"success": False, "message": str(e)}, 500)
 
 @app.route("/")
 def index():
-    return json_response({"status": "online", "service": "DuckDuckGo AI Proxy 2026"})
+    return json_response({
+        "status": "online", 
+        "usage": "/chat?prompt=Hello",
+        "tip": "If you see 'no attribute chat', check your requirements.txt version."
+    })
